@@ -56,6 +56,12 @@ typedef struct {
     uint16_t cs_pin;
 } MCP2515_HandleTypeDef;
 
+typedef struct can_frame_s {
+    uint32_t can_id;  /* 32 bit CAN_ID + EFF/RTR/ERR flags */
+    uint8_t  can_dlc;
+    uint8_t  data[8];
+} can_frame_t;
+
 void MCP2515_Init(MCP2515_HandleTypeDef* hcan, SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_port, uint16_t cs_pin);
 CAN_Error MCP2515_Reset(MCP2515_HandleTypeDef* hcan);
 uint8_t MCP2515_Get_Status(MCP2515_HandleTypeDef* hcan);
