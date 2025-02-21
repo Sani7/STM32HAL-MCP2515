@@ -1,10 +1,3 @@
-/*
- * mcp2515.c
- *
- *  Created on: Dec 13, 2020
- *      Author: matt
- */
-
 #include "mcp2515.h"
 #include "mcp2515_consts.h"
 // #include <stm32f0xx_hal.h>

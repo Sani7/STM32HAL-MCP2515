@@ -1,10 +1,3 @@
-/*
- * mcp2515.h
- *
- *  Created on: Dec 13, 2020
- *      Author: matt
- */
-
 #ifndef APPLICATION_USER_INC_MCP2515_H_
 #define APPLICATION_USER_INC_MCP2515_H_
 
