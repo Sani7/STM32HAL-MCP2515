@@ -2,7 +2,7 @@
 #define APPLICATION_USER_INC_MCP2515_H_
 
 #include <stdint.h>
-#include "can.h"
+#include <stm32f0xx_hal.h>
 
 typedef enum {
     ERROR_OK = 0,
@@ -76,11 +76,11 @@ CAN_Error MCP2515_Set_Bitrate_Clock(MCP2515_HandleTypeDef* hcan, CAN_SPEED canSp
 CAN_Error MCP2515_Set_Filter_Mask(MCP2515_HandleTypeDef* hcan, MASK mask, uint8_t ext, uint32_t ulData);
 CAN_Error MCP2515_Set_Filter(MCP2515_HandleTypeDef* hcan, RXF num, uint8_t ext, uint32_t ulData);
 
-CAN_Error MCP2515_Send_Message_To(MCP2515_HandleTypeDef* hcan, TXBn txbn, can_frame* frame);
-CAN_Error MCP2515_Send_Message(MCP2515_HandleTypeDef* hcan, can_frame* frame);
+CAN_Error MCP2515_Send_Message_To(MCP2515_HandleTypeDef* hcan, TXBn txbn, can_frame_t* frame);
+CAN_Error MCP2515_Send_Message(MCP2515_HandleTypeDef* hcan, can_frame_t* frame);
 
-CAN_Error MCP2515_Read_Message_From(MCP2515_HandleTypeDef* hcan, RXBn rxbn, can_frame* frame);
-CAN_Error MCP2515_Read_Message(MCP2515_HandleTypeDef* hcan, can_frame* frame);
+CAN_Error MCP2515_Read_Message_From(MCP2515_HandleTypeDef* hcan, RXBn rxbn, can_frame_t* frame);
+CAN_Error MCP2515_Read_Message(MCP2515_HandleTypeDef* hcan, can_frame_t* frame);
 
 uint8_t MCP2515_Check_Receive(MCP2515_HandleTypeDef* hcan);
 uint8_t MCP2515_Get_Error_Flags(MCP2515_HandleTypeDef* hcan);

@@ -1,6 +1,6 @@
 #include "mcp2515.h"
 #include "mcp2515_consts.h"
-// #include <stm32f0xx_hal.h>
+#include <stm32f0xx_hal.h>
 
 #define SPI_TIMEOUT 10
 
@@ -95,7 +95,7 @@ CAN_Error MCP2515_Set_Mode(MCP2515_HandleTypeDef* hcan, CANCTRL_REQOP_MODE mode)
     uint8_t modeMatch = 0;
     while (HAL_GetTick() < endTime) {
         MCP2515_Modify_Register(hcan, MCP_CANCTRL, CANCTRL_REQOP, mode);
-        uint8_t newmode = MCP2515_Read_Registers(hcan, MCP_CANSTAT);
+        uint8_t newmode = MCP2515_Read_Register(hcan, MCP_CANSTAT);
         newmode &= CANSTAT_OPMOD;
 
         modeMatch = newmode == mode;
@@ -140,7 +140,7 @@ uint8_t MCP2515_Get_Status(MCP2515_HandleTypeDef* hcan) {
 }
 
 CAN_Error MCP2515_Set_Filter_Mask(MCP2515_HandleTypeDef* hcan, MASK mask, uint8_t ext, uint32_t ulData) {
-    CAN_Error res = setConfigMode();
+    CAN_Error res = MCP2515_Set_Config_Mode(hcan);
     if (res != ERROR_OK) {
         return res;
     }
@@ -160,13 +160,13 @@ CAN_Error MCP2515_Set_Filter_Mask(MCP2515_HandleTypeDef* hcan, MASK mask, uint8_
             return ERROR_FAIL;
     }
 
-    setRegisters(reg, tbufdata, 4);
+    MCP2515_Set_Registers(hcan, reg, tbufdata, 4);
 
     return ERROR_OK;
 }
 
 CAN_Error MCP2515_Set_Filter(MCP2515_HandleTypeDef* hcan, RXF num, uint8_t ext, uint32_t ulData) {
-    CAN_Error res = setConfigMode();
+    CAN_Error res = MCP2515_Set_Config_Mode(hcan);
     if (res != ERROR_OK) {
         return res;
     }
@@ -198,7 +198,7 @@ CAN_Error MCP2515_Set_Filter(MCP2515_HandleTypeDef* hcan, RXF num, uint8_t ext, 
 
     uint8_t tbufdata[4];
     MCP2515_Prepare_Id(tbufdata, ext, ulData);
-    setRegisters(reg, tbufdata, 4);
+    MCP2515_Set_Registers(hcan, reg, tbufdata, 4);
 
     return ERROR_OK;
 }
@@ -212,14 +212,14 @@ CAN_Error MCP2515_Reset(MCP2515_HandleTypeDef* hcan) {
 
     uint8_t zeros[14] = {0};
 
-    setRegisters(MCP_TXB0CTRL, zeros, 14);
-    setRegisters(MCP_TXB1CTRL, zeros, 14);
-    setRegisters(MCP_TXB2CTRL, zeros, 14);
+    MCP2515_Set_Registers(hcan, MCP_TXB0CTRL, zeros, 14);
+    MCP2515_Set_Registers(hcan, MCP_TXB1CTRL, zeros, 14);
+    MCP2515_Set_Registers(hcan, MCP_TXB2CTRL, zeros, 14);
 
-    setRegister(MCP_RXB0CTRL, 0);
-    setRegister(MCP_RXB1CTRL, 0);
+    MCP2515_Set_Register(hcan, MCP_RXB0CTRL, 0);
+    MCP2515_Set_Register(hcan, MCP_RXB1CTRL, 0);
 
-    setRegister(MCP_CANINTE, CANINTF_RX0IF | CANINTF_RX1IF | CANINTF_ERRIF | CANINTF_MERRF);
+    MCP2515_Set_Register(hcan, MCP_CANINTE, CANINTF_RX0IF | CANINTF_RX1IF | CANINTF_ERRIF | CANINTF_MERRF);
 
     // receives all valid messages using either Standard or Extended Identifiers that
     // meet filter criteria. RXF0 is applied for RXB0, RXF1 is applied for RXB1
@@ -268,7 +268,7 @@ CAN_Error MCP2515_Set_Normal_Mode(MCP2515_HandleTypeDef* hcan) {
 }
 
 CAN_Error MCP2515_Set_Bitrate_Clock(MCP2515_HandleTypeDef* hcan, CAN_SPEED canSpeed, CAN_CLOCK canClock) {
-    CAN_Error error = setConfigMode();
+    CAN_Error error = MCP2515_Set_Config_Mode(hcan);
     if (error != ERROR_OK) {
         return error;
     }
@@ -540,9 +540,9 @@ CAN_Error MCP2515_Set_Bitrate_Clock(MCP2515_HandleTypeDef* hcan, CAN_SPEED canSp
     }
 
     if (set) {
-        setRegister(MCP_CNF1, cfg1);
-        setRegister(MCP_CNF2, cfg2);
-        setRegister(MCP_CNF3, cfg3);
+        MCP2515_Set_Register(hcan, MCP_CNF1, cfg1);
+        MCP2515_Set_Register(hcan, MCP_CNF2, cfg2);
+        MCP2515_Set_Register(hcan, MCP_CNF3, cfg3);
         return ERROR_OK;
     }
 
@@ -555,7 +555,7 @@ void MCP2515_Request_To_Send(MCP2515_HandleTypeDef* hcan, uint8_t instruction) {
     HAL_GPIO_WritePin(hcan->cs_port, hcan->cs_pin, GPIO_PIN_SET);
 }
 
-CAN_Error MCP2515_Send_Message_To(MCP2515_HandleTypeDef* hcan, TXBn txbn, can_frame* frame)
+CAN_Error MCP2515_Send_Message_To(MCP2515_HandleTypeDef* hcan, TXBn txbn, can_frame_t* frame)
 // TXBm is just 0,1,2 for txbox number
 {
     if (frame->can_dlc > CAN_MAX_DLEN) {
@@ -583,28 +583,28 @@ CAN_Error MCP2515_Send_Message_To(MCP2515_HandleTypeDef* hcan, TXBn txbn, can_fr
 
     // memcpy(&data[MCP_DATA], frame->data, frame->can_dlc);
 
-    loadTx(load_addr, data, 5 + frame->can_dlc);
-    // setRegisters(load_addr, data, 5 + frame->can_dlc);
+    MCP2515_Load_Tx(hcan, load_addr, data, 5 + frame->can_dlc);
+    // MCP2515_Set_Registers(hcan, load_addr, data, 5 + frame->can_dlc);
 
     // MCP2515_Modify_Register(hcan, txbuf->CTRL, TXB_TXREQ, TXB_TXREQ);
     // MCP2515_Modify_Register(hcan, rts_addr, TXB_TXREQ, TXB_TXREQ);
-    MCP_RequestToSend(rts_addr);
-    // setRegister(rts_addr, TXB_TXREQ);
+    MCP2515_Request_To_Send(hcan, rts_addr);
+    // MCP2515_Set_Register(hcan, rts_addr, TXB_TXREQ);
 
-    uint8_t ctrl = MCP2515_Read_Registers(hcan, rts_addr);
+    uint8_t ctrl = MCP2515_Read_Register(hcan, rts_addr);
     if ((ctrl & (TXB_ABTF | TXB_MLOA | TXB_TXERR)) != 0) {
         return ERROR_FAILTX;
     }
     return ERROR_OK;
 }
 
-CAN_Error MCP2515_Send_Message(MCP2515_HandleTypeDef* hcan, can_frame* frame) {
+CAN_Error MCP2515_Send_Message(MCP2515_HandleTypeDef* hcan, can_frame_t* frame) {
     if (frame->can_dlc > CAN_MAX_DLEN) {
         return ERROR_FAILTX;
     }
 
     for (uint8_t i = 0; i < N_TXBUFFERS; i++) {
-        uint8_t ctrlval = MCP2515_Read_Registers(hcan, (i + 3) << 4);
+        uint8_t ctrlval = MCP2515_Read_Register(hcan, (i + 3) << 4);
         if ((ctrlval & TXB_TXREQ) == 0) {
             return MCP2515_Send_Message_To(hcan, i, frame);
         }
@@ -613,11 +613,11 @@ CAN_Error MCP2515_Send_Message(MCP2515_HandleTypeDef* hcan, can_frame* frame) {
     return ERROR_ALLTXBUSY;
 }
 
-CAN_Error MCP2515_Read_Message_From(MCP2515_HandleTypeDef* hcan, RXBn rxbn, can_frame* frame) {
+CAN_Error MCP2515_Read_Message_From(MCP2515_HandleTypeDef* hcan, RXBn rxbn, can_frame_t* frame) {
     uint8_t readCommand = (rxbn << 2) | 0x90;
     rx_reg_t rxReg;
 
-    readRx(readCommand, rxReg.rx_reg_array, sizeof(rxReg.rx_reg_array));
+    MCP2515_Read_Rx(hcan, readCommand, rxReg.rx_reg_array, sizeof(rxReg.rx_reg_array));
 
     uint32_t id = (rxReg.rx_reg_array[MCP_SIDH] << 3) + (rxReg.rx_reg_array[MCP_SIDL] >> 5);
 
@@ -634,7 +634,7 @@ CAN_Error MCP2515_Read_Message_From(MCP2515_HandleTypeDef* hcan, RXBn rxbn, can_
     }
 
     // 0x60 or 0x70
-    uint8_t ctrl = MCP2515_Read_Registers(hcan, (rxbn + 6) << 4);
+    uint8_t ctrl = MCP2515_Read_Register(hcan, (rxbn + 6) << 4);
     if (ctrl & RXBnCTRL_RTR) {
         id |= CAN_RTR_FLAG;
     }
@@ -657,14 +657,14 @@ CAN_Error MCP2515_Read_Message_From(MCP2515_HandleTypeDef* hcan, RXBn rxbn, can_
     return ERROR_OK;
 }
 
-CAN_Error MCP2515_Read_Message(MCP2515_HandleTypeDef* hcan, can_frame* frame) {
+CAN_Error MCP2515_Read_Message(MCP2515_HandleTypeDef* hcan, can_frame_t* frame) {
     CAN_Error rc;
     uint8_t stat = MCP2515_Get_Status(hcan);
 
     if (stat & STAT_RX0IF) {
-        rc = MCP2515_Read_Message_From(RXB0, frame);
+        rc = MCP2515_Read_Message_From(hcan, RXB0, frame);
     } else if (stat & STAT_RX1IF) {
-        rc = MCP2515_Read_Message_From(RXB1, frame);
+        rc = MCP2515_Read_Message_From(hcan, RXB1, frame);
     } else {
         rc = ERROR_NOMSG;
     }
@@ -682,11 +682,11 @@ uint8_t MCP2515_Check_Receive(MCP2515_HandleTypeDef* hcan) {
 }
 
 uint8_t MCP2515_Get_Error_Flags(MCP2515_HandleTypeDef* hcan) {
-    return MCP2515_Read_Registers(hcan, MCP_EFLG);
+    return MCP2515_Read_Register(hcan, MCP_EFLG);
 }
 
 uint8_t MCP2515_Check_Error(MCP2515_HandleTypeDef* hcan) {
-    uint8_t eflg = MCP_getErrorFlags();
+    uint8_t eflg = MCP2515_Get_Error_Flags(hcan);
 
     if (eflg & EFLG_ERRORMASK) {
         return 1;
@@ -700,15 +700,15 @@ void MCP2515_Clear_RXn_OVR_Flags(MCP2515_HandleTypeDef* hcan) {
 }
 
 uint8_t MCP2515_Get_Interrupts(MCP2515_HandleTypeDef* hcan) {
-    return MCP2515_Read_Registers(hcan, MCP_CANINTF);
+    return MCP2515_Read_Register(hcan, MCP_CANINTF);
 }
 
 void MCP2515_Clear_Interrupts(MCP2515_HandleTypeDef* hcan) {
-    setRegister(MCP_CANINTF, 0);
+    MCP2515_Set_Register(hcan, MCP_CANINTF, 0);
 }
 
 uint8_t MCP2515_Get_Interrupt_Mask(MCP2515_HandleTypeDef* hcan) {
-    return MCP2515_Read_Registers(hcan, MCP_CANINTE);
+    return MCP2515_Read_Register(hcan, MCP_CANINTE);
 }
 
 void MCP2515_Clear_TX_Interrupts(MCP2515_HandleTypeDef* hcan) {
@@ -716,10 +716,10 @@ void MCP2515_Clear_TX_Interrupts(MCP2515_HandleTypeDef* hcan) {
 }
 
 void MCP2515_Clear_RXn_OVR(MCP2515_HandleTypeDef* hcan) {
-    uint8_t eflg = MCP_getErrorFlags();
+    uint8_t eflg = MCP2515_Get_Error_Flags(hcan);
     if (eflg != 0) {
-        MCP_clearRXnOVRFlags();
-        MCP_clearInterrupts();
+        MCP2515_Clear_RXn_OVR_Flags(hcan);
+        MCP2515_Clear_Interrupts(hcan);
         // MCP2515_Modify_Register(hcan, MCP_CANINTF, CANINTF_ERRIF, 0);
     }
 }
