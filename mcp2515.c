@@ -251,20 +251,42 @@ CAN_Error MCP2515_Reset(MCP2515_HandleTypeDef* hcan) {
     return ERROR_OK;
 }
 
-CAN_Error MCP2515_Set_Listen_Only_Mode(MCP2515_HandleTypeDef* hcan) {
-    return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_LISTENONLY);
+CAN_Error MCP2515_Set_Mode(MCP2515_HandleTypeDef* hcan, MCP2515_Mode_t mode) {
+    switch (mode) {
+        case MODE_LISTEN_ONLY:
+            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_LISTENONLY);
+        break;
+        case MODE_LOOPBACK: 
+            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_LOOPBACK);
+        break;
+        case MODE_SLEEP: 
+            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_SLEEP);
+        break;
+        case MODE_NORMAL: 
+            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_NORMAL);
+        break;
+        default: 
+            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_NORMAL);
+        break;
+    }
 }
 
-CAN_Error MCP2515_Set_Sleep_Mode(MCP2515_HandleTypeDef* hcan) {
-    return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_SLEEP);
+CAN_Error MCP2515_Set_Pin_Control(MCP2515_HandleTypeDef* hcan, bool B1BFS, bool B0BFS, bool B1BFE, bool B0BFE, bool B1BFM, bool B0BFM) {
+    CAN_Error error = MCP2515_Set_Config_Mode(hcan);
+    if (error != ERROR_OK) {
+        return error;
+    }
+    MCP2515_Set_Register(hcan, MCP_BFPCTRL, (B1BFS << 5) | (B0BFS << 4) | (B1BFE << 3) | (B0BFE << 2) | (B1BFM << 1) | B0BFM);
+    return ERROR_OK;
 }
 
-CAN_Error MCP2515_Set_Loopback_Mode(MCP2515_HandleTypeDef* hcan) {
-    return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_LOOPBACK);
-}
-
-CAN_Error MCP2515_Set_Normal_Mode(MCP2515_HandleTypeDef* hcan) {
-    return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_NORMAL);
+CAN_Error MCP2515_Set_Interrupt(MCP2515_HandleTypeDef* hcan, bool MERRIE, bool WAKIE, bool ERRIE, bool TX2IE, bool TX1IE, bool TX0IE, bool RX1IE, bool RX0IE) {
+    CAN_Error error = MCP2515_Set_Config_Mode(hcan);
+    if (error != ERROR_OK) {
+        return error;
+    }
+    MCP2515_Set_Register(hcan, MCP_CANINTE, (MERRIE << 7) | (WAKIE << 6) | (ERRIE << 5) | (TX2IE << 4) | (TX1IE << 3) | (TX0IE << 2) | (RX1IE << 1) | RX0IE);
+    return ERROR_OK;
 }
 
 CAN_Error MCP2515_Set_Bitrate_Clock(MCP2515_HandleTypeDef* hcan, CAN_SPEED canSpeed, CAN_CLOCK canClock) {

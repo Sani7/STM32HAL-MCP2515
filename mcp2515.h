@@ -50,6 +50,13 @@ typedef enum { TXB0 = 0, TXB1 = 1, TXB2 = 2 } TXBn;
 
 typedef enum { RXB0 = 0, RXB1 = 1 } RXBn;
 
+typedef enum {
+    MODE_LISTEN_ONLY,
+    MODE_SLEEP,
+    MODE_LOOPBACK,
+    MODE_NORMAL
+} MCP2515_Mode_t;
+
 typedef struct {
     SPI_HandleTypeDef* hspi;
     GPIO_TypeDef* cs_port;
@@ -66,10 +73,7 @@ void MCP2515_Init(MCP2515_HandleTypeDef* hcan, SPI_HandleTypeDef* hspi, GPIO_Typ
 CAN_Error MCP2515_Reset(MCP2515_HandleTypeDef* hcan);
 uint8_t MCP2515_Get_Status(MCP2515_HandleTypeDef* hcan);
 
-CAN_Error MCP2515_Set_Listen_Only_Mode(MCP2515_HandleTypeDef* hcan);
-CAN_Error MCP2515_Set_Sleep_Mode(MCP2515_HandleTypeDef* hcan);
-CAN_Error MCP2515_Set_Loopback_Mode(MCP2515_HandleTypeDef* hcan);
-CAN_Error MCP2515_Set_Normal_Mode(MCP2515_HandleTypeDef* hcan);
+CAN_Error MCP2515_Set_Mode(MCP2515_HandleTypeDef* hcan, MCP2515_Mode_t mode);
 
 CAN_Error MCP2515_Set_Bitrate_Clock(MCP2515_HandleTypeDef* hcan, CAN_SPEED canSpeed, CAN_CLOCK canClock);
 
