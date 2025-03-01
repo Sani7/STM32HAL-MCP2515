@@ -2,6 +2,7 @@
 #define APPLICATION_USER_INC_MCP2515_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stm32f0xx_hal.h>
 
 typedef enum {
@@ -51,11 +52,18 @@ typedef enum { TXB0 = 0, TXB1 = 1, TXB2 = 2 } TXBn;
 typedef enum { RXB0 = 0, RXB1 = 1 } RXBn;
 
 typedef enum {
-    MODE_LISTEN_ONLY,
+    MODE_NORMAL,
     MODE_SLEEP,
     MODE_LOOPBACK,
-    MODE_NORMAL
+    MODE_LISTEN_ONLY
 } MCP2515_Mode_t;
+
+typedef enum {
+    PRIORITY_LOW,
+    PRIORITY_NORMAL,
+    PRIORITY_HIGH,
+    PRIORITY_HIGHEST,
+} MCP2515_Priority_t;
 
 typedef struct {
     SPI_HandleTypeDef* hspi;
@@ -74,8 +82,11 @@ CAN_Error MCP2515_Reset(MCP2515_HandleTypeDef* hcan);
 uint8_t MCP2515_Get_Status(MCP2515_HandleTypeDef* hcan);
 
 CAN_Error MCP2515_Set_Mode(MCP2515_HandleTypeDef* hcan, MCP2515_Mode_t mode);
+CAN_Error MCP2515_Set_Pin_Control(MCP2515_HandleTypeDef* hcan, bool B1BFS, bool B0BFS, bool B1BFE, bool B0BFE, bool B1BFM, bool B0BFM);
+CAN_Error MCP2515_Set_Interrupt(MCP2515_HandleTypeDef* hcan, bool MERRIE, bool WAKIE, bool ERRIE, bool TX2IE, bool TX1IE, bool TX0IE, bool RX1IE, bool RX0IE);
 
 CAN_Error MCP2515_Set_Bitrate_Clock(MCP2515_HandleTypeDef* hcan, CAN_SPEED canSpeed, CAN_CLOCK canClock);
+CAN_Error MCP2515_Set_Transmit_Priority(MCP2515_HandleTypeDef* hcan, MCP2515_Priority_t txb0, MCP2515_Priority_t txb1, MCP2515_Priority_t txb2);
 
 CAN_Error MCP2515_Set_Filter_Mask(MCP2515_HandleTypeDef* hcan, MASK mask, uint8_t ext, uint32_t ulData);
 CAN_Error MCP2515_Set_Filter(MCP2515_HandleTypeDef* hcan, RXF num, uint8_t ext, uint32_t ulData);

@@ -90,7 +90,7 @@ void MCP2515_Read_Rx(MCP2515_HandleTypeDef* hcan, REGISTER reg, uint8_t values[]
     HAL_GPIO_WritePin(hcan->cs_port, hcan->cs_pin, GPIO_PIN_SET);
 }
 
-CAN_Error MCP2515_Set_Mode(MCP2515_HandleTypeDef* hcan, CANCTRL_REQOP_MODE mode) {
+CAN_Error MCP2515_Set_Mode(MCP2515_HandleTypeDef* hcan, MCP2515_Mode_t mode) {
     unsigned long endTime = HAL_GetTick() + 10;
     uint8_t modeMatch = 0;
     while (HAL_GetTick() < endTime) {
@@ -249,26 +249,6 @@ CAN_Error MCP2515_Reset(MCP2515_HandleTypeDef* hcan) {
     }
 
     return ERROR_OK;
-}
-
-CAN_Error MCP2515_Set_Mode(MCP2515_HandleTypeDef* hcan, MCP2515_Mode_t mode) {
-    switch (mode) {
-        case MODE_LISTEN_ONLY:
-            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_LISTENONLY);
-        break;
-        case MODE_LOOPBACK: 
-            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_LOOPBACK);
-        break;
-        case MODE_SLEEP: 
-            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_SLEEP);
-        break;
-        case MODE_NORMAL: 
-            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_NORMAL);
-        break;
-        default: 
-            return MCP2515_Set_Mode(hcan, CANCTRL_REQOP_NORMAL);
-        break;
-    }
 }
 
 CAN_Error MCP2515_Set_Pin_Control(MCP2515_HandleTypeDef* hcan, bool B1BFS, bool B0BFS, bool B1BFE, bool B0BFE, bool B1BFM, bool B0BFM) {
@@ -569,6 +549,13 @@ CAN_Error MCP2515_Set_Bitrate_Clock(MCP2515_HandleTypeDef* hcan, CAN_SPEED canSp
     }
 
     return ERROR_FAIL;
+}
+
+CAN_Error MCP2515_Set_Transmit_Priority(MCP2515_HandleTypeDef* hcan, MCP2515_Priority_t txb0, MCP2515_Priority_t txb1, MCP2515_Priority_t txb2)
+{
+    MCP2515_Set_Register(hcan, MCP_TXB0CTRL, txb0);
+    MCP2515_Set_Register(hcan, MCP_TXB1CTRL, txb1);
+    MCP2515_Set_Register(hcan, MCP_TXB2CTRL, txb2);
 }
 
 void MCP2515_Request_To_Send(MCP2515_HandleTypeDef* hcan, uint8_t instruction) {

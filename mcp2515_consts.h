@@ -210,6 +210,7 @@ typedef enum {
             MCP_RXF2EID8 = 0x0A,
             MCP_RXF2EID0 = 0x0B,
             MCP_BFPCTRL  = 0x0C,
+            MCP_TXRTSCTR = 0x0D,
             MCP_CANSTAT  = 0x0E,
             MCP_CANCTRL  = 0x0F,
             MCP_RXF3SIDH = 0x10,
